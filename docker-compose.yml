@@ -1,13 +1,29 @@
-version: '3.7'
+version: "3.7"
 services:
   duplicacy:
-    image: erichough/duplicacy
-    restart: always
-    ports:
-      - 3875:3875
+    build: .
+    restart: unless-stopped
     cap_drop:
       - ALL
     volumes:
-      - /host/path/to/config/dir:/etc/duplicacy
-      - /host/path/to/cache:/var/cache/duplicacy
-      - /host/path/to/storage:/storage
+      - /mnt/user/appdata/duplicacy/config:/etc/duplicacy
+      - cache:/var/cache/duplicacy
+      - /mnt/user:/shares
+      - logs:/var/log
+    hostname: duplicacy
+    env_file: .env
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.duplicacy.loadBalancer.server.url=http://duplicacy:3875/
+      - traefik.http.routers.duplicacy.rule=Host(`duplicacy.lan`)
+      - traefik.http.routers.duplicacy.service=duplicacy
+    networks:
+      - proxy
+
+volumes:
+  cache:
+  logs:
+
+networks:
+  proxy:
+    name: proxy
